@@ -36,6 +36,28 @@ export default function BookingForm() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [timeError, setTimeError] = useState<string | null>(null);
 
+  // פונקציה ליצירת חלונות זמן אפשריים בהתאם ליום שנבחר
+  const generateTimeSlots = (dayOfWeek: number): string[] => {
+    if (dayOfWeek === 6) return []; // יום שבת סגור
+    
+    const dayHours = workingHours[dayOfWeek as keyof typeof workingHours];
+    const [startHour, startMinute] = dayHours.start.split(':').map(Number);
+    const [endHour, endMinute] = dayHours.end.split(':').map(Number);
+    
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
+    
+    const timeSlots: string[] = [];
+    // יצירת חלונות זמן של 30 דקות
+    for (let minutes = startTimeInMinutes; minutes <= endTimeInMinutes - 30; minutes += 30) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      timeSlots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+    }
+    
+    return timeSlots;
+  };
+
   const handleNext = () => {
     if (activeStep === 0 && !isTimeValid()) {
       return;
@@ -108,528 +130,325 @@ export default function BookingForm() {
     }
   }, [date, time]);
 
+  // כאשר משתנה התאריך, נאפס את השעה שנבחרה
+  useEffect(() => {
+    if (date) {
+      setTime(null);
+      setTimeError(null);
+    }
+  }, [date]);
+
   const isStepOneValid = date && time && !timeError;
   const isStepTwoValid = name && contactInfo;
 
-  // If the form is submitted, show a success page
-  if (isSubmitted) {
-    return (
-      <Box 
-        component={motion.div}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        sx={{ 
-          textAlign: 'center', 
-          py: 4,
-          minHeight: '60vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}
-      >
-        <Paper 
-          elevation={4} 
-          sx={{ 
-            p: { xs: 3, md: 5 }, 
-            borderRadius: 3, 
-            maxWidth: 650, 
-            mx: 'auto', 
-            position: 'relative',
-            background: 'linear-gradient(to bottom, #ffffff, #f9f9f9)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
-          }}
+  return (
+    <Box sx={{ width: '100%', mt: 4 }}>
+      {!isSubmitted ? (
+        <form onSubmit={handleSubmit}>
+          <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+            {activeStep === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Typography variant="h6" gutterBottom align="center">
+                  בחירת תאריך ושעה
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="he">
+                      <DatePicker
+                        label="תאריך"
+                        value={date}
+                        onChange={(newDate) => setDate(newDate)}
+                        disablePast
+                        sx={{ width: '100%' }}
+                        slotProps={{
+                          textField: {
+                            id: "booking-date",
+                            name: "booking-date",
+                            required: true,
+                            helperText: "בחר תאריך לתור"
+                          }
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                  
+                  {date && (
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle1" gutterBottom>
+                        בחר שעה:
+                      </Typography>
+                      
+                      {date.day() === 6 ? (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                          המספרה סגורה בימי שבת
+                        </Alert>
+                      ) : (
+                        <>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            שעות פעילות ביום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][date.day()]}: 
+                            {workingHours[date.day() as keyof typeof workingHours].start} - 
+                            {workingHours[date.day() as keyof typeof workingHours].end}
+                          </Typography>
+                          
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                            {generateTimeSlots(date.day()).map((timeSlot: string) => (
+                              <Button
+                                key={timeSlot}
+                                variant={time && time.format('HH:mm') === timeSlot ? "contained" : "outlined"}
+                                color="primary"
+                                onClick={() => {
+                                  const [hours, minutes] = timeSlot.split(':').map(Number);
+                                  const newTime = dayjs().hour(hours).minute(minutes);
+                                  setTime(newTime);
+                                  setTimeError(null);
+                                }}
+                                sx={{ minWidth: '80px' }}
+                              >
+                                {timeSlot}
+                              </Button>
+                            ))}
+                          </Box>
+                        </>
+                      )}
+                      
+                      {timeError && (
+                        <FormHelperText error>{timeError}</FormHelperText>
+                      )}
+                    </Grid>
+                  )}
+                </Grid>
+              </motion.div>
+            )}
+
+            {activeStep === 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Typography variant="h6" gutterBottom align="center">
+                  פרטים נוספים
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="name"
+                      name="name"
+                      label="שם מלא"
+                      fullWidth
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="people-count"
+                      name="people-count"
+                      label="מספר אנשים"
+                      type="number"
+                      fullWidth
+                      InputProps={{ inputProps: { min: 1, max: 10 } }}
+                      value={peopleCount}
+                      onChange={(e) => setPeopleCount(parseInt(e.target.value))}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="notification-method"
+                      name="notification-method"
+                      select
+                      label="שיטת התראה מועדפת"
+                      fullWidth
+                      value={notificationMethod}
+                      onChange={(e) => setNotificationMethod(e.target.value)}
+                    >
+                      <MenuItem value="WhatsApp">WhatsApp</MenuItem>
+                      <MenuItem value="SMS">SMS</MenuItem>
+                      <MenuItem value="Email">אימייל</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="contact-info"
+                      name="contact-info"
+                      label={notificationMethod === 'Email' ? 'כתובת אימייל' : 'מספר טלפון'}
+                      fullWidth
+                      required
+                      value={contactInfo}
+                      onChange={(e) => setContactInfo(e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
+              </motion.div>
+            )}
+
+            {activeStep === 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Typography variant="h6" gutterBottom align="center">
+                  סיכום הזמנה
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1">תאריך:</Typography>
+                    <Typography variant="body1">{date?.format('DD/MM/YYYY')}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1">שעה:</Typography>
+                    <Typography variant="body1">{time?.format('HH:mm')}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1">שם:</Typography>
+                    <Typography variant="body1">{name}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1">מספר אנשים:</Typography>
+                    <Typography variant="body1">{peopleCount}</Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1">פרטי התקשרות:</Typography>
+                    <Typography variant="body1">{contactInfo} ({notificationMethod})</Typography>
+                  </Grid>
+                </Grid>
+              </motion.div>
+            )}
+          </Paper>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              sx={{ mr: 1 }}
+            >
+              חזרה
+            </Button>
+            <Box>
+              {activeStep === steps.length - 1 ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  disabled={!isStepTwoValid}
+                >
+                  שליחת בקשה
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleNext}
+                  disabled={activeStep === 0 ? !isStepOneValid : !isStepTwoValid}
+                >
+                  המשך
+                </Button>
+              )}
+            </Box>
+          </Box>
+        </form>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          <Box 
+          <Paper 
+            elevation={3} 
             sx={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              right: 0, 
-              height: '8px', 
-              background: 'linear-gradient(90deg, #4caf50, #8bc34a)',
-              borderTopLeftRadius: 12,
-              borderTopRightRadius: 12
-            }} 
-          />
-          
-          <Box 
-            component={motion.div}
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            sx={{ 
-              width: 100, 
-              height: 100, 
-              borderRadius: '50%', 
-              background: 'rgba(76, 175, 80, 0.1)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
+              p: 4, 
+              textAlign: 'center',
+              borderRadius: 2,
+              maxWidth: 600,
               mx: 'auto',
-              mb: 3
+              backgroundColor: '#f9f9f9'
             }}
           >
             <CheckCircleOutline 
               color="success" 
-              sx={{ 
-                fontSize: 60,
-                animation: 'pulse 2s infinite',
-                '@keyframes pulse': {
-                  '0%': { transform: 'scale(1)', opacity: 1 },
-                  '50%': { transform: 'scale(1.1)', opacity: 0.8 },
-                  '100%': { transform: 'scale(1)', opacity: 1 },
-                }
-              }} 
+              sx={{ fontSize: 80, mb: 2 }} 
             />
-          </Box>
-          
-          <Typography 
-            variant="h4" 
-            gutterBottom 
-            color="primary"
-            component={motion.h2}
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            sx={{ fontWeight: 'bold', mb: 2 }}
-          >
-            הבקשה נשלחה בהצלחה!
-          </Typography>
-          
-          <Typography 
-            variant="body1" 
-            paragraph
-            component={motion.p}
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            sx={{ mb: 4, color: 'text.secondary', fontSize: '1.1rem' }}
-          >
-            אנו ניצור איתך קשר עם אישור התור באמצעות {notificationMethod}.
-          </Typography>
-          
-          <Divider sx={{ my: 4 }} />
-          
-          <Box
-            component={motion.div}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 3, 
-                fontWeight: 500,
-                display: 'inline-block',
-                borderBottom: '2px solid #4caf50',
-                paddingBottom: 1
-              }}
-            >
-              פרטי ההזמנה
+            <Typography variant="h4" gutterBottom>
+              הבקשה נשלחה בהצלחה!
             </Typography>
-            
-            <Paper 
-              variant="outlined" 
-              sx={{ 
-                p: 3, 
-                borderRadius: 2, 
-                background: 'rgba(0,0,0,0.02)',
-                mb: 4
-              }}
-            >
-              <Box>
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  py: 1.5,
-                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                }}>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>שם:</Typography>
-                  <Typography variant="body1" fontWeight="medium">{name}</Typography>
-                </Box>
-                
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  py: 1.5,
-                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                }}>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>תאריך:</Typography>
-                  <Typography variant="body1" fontWeight="medium">{date?.format('DD/MM/YYYY')}</Typography>
-                </Box>
-                
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  py: 1.5,
-                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                }}>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>שעה:</Typography>
-                  <Typography variant="body1" fontWeight="medium">{time?.format('HH:mm')}</Typography>
-                </Box>
-                
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  py: 1.5,
-                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                }}>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>כמות אנשים:</Typography>
-                  <Typography variant="body1" fontWeight="medium">{peopleCount}</Typography>
-                </Box>
-                
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  py: 1.5,
-                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                }}>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>אמצעי התראה:</Typography>
-                  <Typography variant="body1" fontWeight="medium">{notificationMethod}</Typography>
-                </Box>
-                
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  py: 1.5
-                }}>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>פרטי קשר:</Typography>
-                  <Typography variant="body1" fontWeight="medium">{contactInfo}</Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
-          
-          <Box 
-            sx={{ 
-              mt: 4, 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: 2,
-              flexDirection: { xs: 'column', sm: 'row' }
-            }}
-          >
+            <Typography variant="body1" paragraph sx={{ mb: 3 }}>
+              קיבלנו את בקשתך לתור בתאריך {date?.format('DD/MM/YYYY')} בשעה {time?.format('HH:mm')}.
+              נשלח לך אישור באמצעות {notificationMethod === 'Email' ? 'אימייל' : notificationMethod} בקרוב.
+            </Typography>
+            <Divider sx={{ my: 3 }} />
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                פרטי ההזמנה:
+              </Typography>
+              <Grid container spacing={2} sx={{ textAlign: 'left', mt: 1 }}>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2">שם:</Typography>
+                  <Typography variant="body2">{name}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2">מספר אנשים:</Typography>
+                  <Typography variant="body2">{peopleCount}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2">תאריך:</Typography>
+                  <Typography variant="body2">{date?.format('DD/MM/YYYY')}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2">שעה:</Typography>
+                  <Typography variant="body2">{time?.format('HH:mm')}</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2">פרטי התקשרות:</Typography>
+                  <Typography variant="body2">{contactInfo}</Typography>
+                </Grid>
+              </Grid>
+            </Box>
             <Button
               variant="contained"
               color="primary"
               onClick={resetForm}
-              startIcon={<CloseIcon />}
-              sx={{ 
-                py: 1.5, 
-                px: 3, 
-                borderRadius: 2,
-                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)'
-              }}
+              sx={{ mt: 4 }}
             >
-              סגור וחזור לטופס
+              הזמנה חדשה
             </Button>
-            
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => window.location.href = '/'}
-              sx={{ py: 1.5, px: 3, borderRadius: 2 }}
-            >
-              חזור לדף הבית
-            </Button>
-          </Box>
-        </Paper>
-        
-        <Snackbar
-          open={showSuccessMessage}
-          autoHideDuration={4000}
+          </Paper>
+        </motion.div>
+      )}
+
+      <Snackbar
+        open={showSuccessMessage}
+        autoHideDuration={6000}
+        onClose={() => setShowSuccessMessage(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
           onClose={() => setShowSuccessMessage(false)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          severity="success"
+          sx={{ width: '100%' }}
         >
-          <Alert 
-            severity="success" 
-            sx={{ 
-              width: '100%',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-            }}
-          >
-            הבקשה נשלחה בהצלחה!
-          </Alert>
-        </Snackbar>
-      </Box>
-    );
-  }
-
-  const getStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box component={motion.div} 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5 }}
-          >
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <DatePicker
-                  label="תאריך"
-                  value={date}
-                  onChange={(newValue) => {
-                    setDate(newValue);
-                    setTimeError(null); // איפוס שגיאות בעת שינוי תאריך
-                  }}
-                  sx={{ width: '100%' }}
-                  disablePast
-                  shouldDisableDate={(date) => date.day() === 6} // חסימת ימי שבת
-                  slotProps={{
-                    textField: {
-                      id: "booking-date",
-                      name: "booking-date",
-                      inputProps: {
-                        'aria-label': 'תאריך'
-                      },
-                      helperText: "ימי שבת וחגים המספרה סגורה"
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TimePicker
-                  label="שעה"
-                  value={time}
-                  onChange={(newValue) => {
-                    setTime(newValue);
-                    setTimeError(null); // איפוס שגיאות בעת שינוי שעה
-                  }}
-                  sx={{ width: '100%' }}
-                  slotProps={{
-                    textField: {
-                      id: "booking-time",
-                      name: "booking-time",
-                      inputProps: {
-                        'aria-label': 'שעה'
-                      },
-                      error: !!timeError,
-                      helperText: timeError || "בחר שעה בהתאם לשעות הפעילות"
-                    }
-                  }}
-                />
-              </Grid>
-              {timeError && (
-                <Grid item xs={12}>
-                  <Alert 
-                    severity="error" 
-                    icon={<ErrorOutline />}
-                    sx={{ mt: 1 }}
-                  >
-                    {timeError}
-                  </Alert>
-                </Grid>
-              )}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  שעות פעילות:
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  ימים א-ד: 09:00-20:00 | יום ה: 08:00-21:00 | יום ו: 08:00-15:00 | שבת: סגור
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
-        );
-      case 1:
-        return (
-          <Box component={motion.div} 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5 }}
-          >
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  id="full-name"
-                  name="full-name"
-                  label="שם מלא"
-                  variant="outlined"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  inputProps={{
-                    'aria-label': 'שם מלא'
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="people-count"
-                  name="people-count"
-                  label="כמות אנשים"
-                  variant="outlined"
-                  select
-                  value={peopleCount}
-                  onChange={(e) => setPeopleCount(Number(e.target.value))}
-                  required
-                  inputProps={{
-                    'aria-label': 'כמות אנשים'
-                  }}
-                >
-                  {[1, 2, 3, 4, 5].map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="notification-method"
-                  name="notification-method"
-                  label="אמצעי התראה מועדף"
-                  variant="outlined"
-                  select
-                  value={notificationMethod}
-                  onChange={(e) => setNotificationMethod(e.target.value)}
-                  required
-                  inputProps={{
-                    'aria-label': 'אמצעי התראה מועדף'
-                  }}
-                >
-                  {['WhatsApp', 'Email', 'SMS'].map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  id="contact-info"
-                  name="contact-info"
-                  label={notificationMethod === 'Email' ? 'דוא"ל' : 'מספר טלפון'}
-                  variant="outlined"
-                  value={contactInfo}
-                  onChange={(e) => setContactInfo(e.target.value)}
-                  required
-                  type={notificationMethod === 'Email' ? 'email' : 'tel'}
-                  inputProps={{
-                    'aria-label': notificationMethod === 'Email' ? 'דוא"ל' : 'מספר טלפון'
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        );
-      case 2:
-        return (
-          <Box component={motion.div} 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5 }}
-            sx={{ textAlign: 'center' }}
-          >
-            <Typography variant="h5" gutterBottom>
-              אישור פרטים
-            </Typography>
-            <Grid container spacing={2} sx={{ mt: 2, textAlign: 'right' }}>
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="bold">שם:</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body1">{name}</Typography>
-              </Grid>
-              
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="bold">תאריך:</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body1">{date?.format('DD/MM/YYYY')}</Typography>
-              </Grid>
-              
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="bold">שעה:</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body1">{time?.format('HH:mm')}</Typography>
-              </Grid>
-              
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="bold">כמות אנשים:</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body1">{peopleCount}</Typography>
-              </Grid>
-              
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="bold">אמצעי התראה:</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body1">{notificationMethod}</Typography>
-              </Grid>
-              
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="bold">פרטי קשר:</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="body1">{contactInfo}</Typography>
-              </Grid>
-            </Grid>
-            
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
-              לאחר אישור הפרטים, הבקשה תישלח לספר. תקבל הודעת אישור באמצעי ההתראה שבחרת.
-            </Typography>
-          </Box>
-        );
-      default:
-        return 'שלב לא ידוע';
-    }
-  };
-
-  return (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="he">
-      <Box component="form" id="booking-form" name="booking-form" noValidate onSubmit={handleSubmit}>
-        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
-          {steps.map((label, index) => (
-            <Step key={label}>
-              <StepLabel id={`step-label-${index}`}>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-        
-        <Box sx={{ py: 4 }}>
-          {getStepContent(activeStep)}
-        </Box>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-          <Button
-            id="back-button"
-            name="back-button"
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            variant="outlined"
-          >
-            חזור
-          </Button>
-          
-          <Button
-            id="next-button"
-            name="next-button"
-            variant="contained"
-            color="primary"
-            onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
-            disabled={(activeStep === 0 && !isStepOneValid) || (activeStep === 1 && !isStepTwoValid)}
-            type={activeStep === steps.length - 1 ? "submit" : "button"}
-          >
-            {activeStep === steps.length - 1 ? 'שלח בקשה' : 'המשך'}
-          </Button>
-        </Box>
-      </Box>
-    </LocalizationProvider>
+          הבקשה נשלחה בהצלחה!
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 } 
