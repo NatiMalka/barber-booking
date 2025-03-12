@@ -20,6 +20,14 @@ const theme = createTheme({
   },
 }, heIL);
 
+// Create rtl cache
+const cacheRtl = typeof window !== 'undefined' 
+  ? createCache({
+      key: 'muirtl',
+      stylisPlugins: [prefixer, rtlPlugin],
+    })
+  : null;
+
 export default function ClientLayout({
   children,
 }: Readonly<{
@@ -27,27 +35,19 @@ export default function ClientLayout({
 }>) {
   // Use client-side only rendering to avoid hydration mismatch
   const [mounted, setMounted] = useState(false);
-  
-  // Create rtl cache on the client side only
-  const [cacheRtl] = useState(() => 
-    createCache({
-      key: 'muirtl',
-      stylisPlugins: [prefixer, rtlPlugin],
-    })
-  );
 
   // After hydration, we can show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // During SSR and initial client render, return a simple placeholder
   if (!mounted) {
-    // Return a placeholder with the same structure but without styles
-    // to avoid hydration mismatch
-    return <>{children}</>;
+    return <div style={{ visibility: 'hidden' }}>{children}</div>;
   }
 
-  return (
+  // Only render the full UI after hydration and when cacheRtl is available
+  return cacheRtl ? (
     <CacheProvider value={cacheRtl}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -56,5 +56,5 @@ export default function ClientLayout({
         </LocalizationProvider>
       </ThemeProvider>
     </CacheProvider>
-  );
+  ) : null;
 } 

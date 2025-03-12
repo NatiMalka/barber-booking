@@ -14,12 +14,12 @@ const DAYS_OF_WEEK = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמ�
 
 // Initial settings (would normally come from Firebase)
 const initialAvailability = [
-  { day: 0, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 17).set('minute', 0) },
-  { day: 1, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 17).set('minute', 0) },
-  { day: 2, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 17).set('minute', 0) },
-  { day: 3, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 17).set('minute', 0) },
-  { day: 4, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 17).set('minute', 0) },
-  { day: 5, active: false, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 14).set('minute', 0) },
+  { day: 0, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 20).set('minute', 0) },
+  { day: 1, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 20).set('minute', 0) },
+  { day: 2, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 20).set('minute', 0) },
+  { day: 3, active: true, startTime: dayjs().set('hour', 9).set('minute', 0), endTime: dayjs().set('hour', 20).set('minute', 0) },
+  { day: 4, active: true, startTime: dayjs().set('hour', 8).set('minute', 0), endTime: dayjs().set('hour', 21).set('minute', 0) },
+  { day: 5, active: true, startTime: dayjs().set('hour', 8).set('minute', 0), endTime: dayjs().set('hour', 15).set('minute', 0) },
   { day: 6, active: false, startTime: dayjs().set('hour', 0).set('minute', 0), endTime: dayjs().set('hour', 0).set('minute', 0) },
 ];
 
@@ -83,47 +83,20 @@ export default function SettingsPage() {
     setSpecialDays(newSpecialDays);
   };
 
-  const saveSettings = () => {
-    // In a real app, this would save to Firebase
-    console.log('Saving settings:', { availability, specialDays, appointmentDuration });
-    
-    // Show success message
+  const handleSaveSettings = () => {
+    // Here you would save the settings to Firebase
     setShowSuccessAlert(true);
     setTimeout(() => setShowSuccessAlert(false), 3000);
   };
 
   return (
     <Box
-      component={motion.div}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
       sx={{
         minHeight: '100vh',
-        background: '#f5f5f5',
-        pb: 10,
+        py: 4,
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       }}
     >
-      {/* Header */}
-      <Box 
-        sx={{ 
-          background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-          color: 'white',
-          py: 2,
-          px: 3,
-          display: 'flex',
-          alignItems: 'center',
-          mb: 4,
-        }}
-      >
-        <IconButton color="inherit" onClick={() => router.push('/admin/dashboard')} sx={{ mr: 2 }}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant="h5" component="h1">
-          הגדרות זמינות
-        </Typography>
-      </Box>
-
       <Container maxWidth="lg">
         {showSuccessAlert && (
           <Box
@@ -199,8 +172,14 @@ export default function SettingsPage() {
                   </CardContent>
                 </Card>
               ))}
+              
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  <strong>הערה:</strong> ערבי חג המספרה פתוחה במתכונת ימי שישי. ימי שבת וחגים המספרה סגורה.
+                </Typography>
+              </Box>
             </Paper>
-
+            
             <Paper 
               component={motion.div}
               initial={{ x: -30, opacity: 0 }}
@@ -209,31 +188,25 @@ export default function SettingsPage() {
               sx={{ p: 3 }}
             >
               <Typography variant="h6" gutterBottom>
-                הגדרות כלליות
+                הגדרות נוספות
               </Typography>
-              <Grid container spacing={3} alignItems="center">
-                <Grid item xs={12} sm={8}>
-                  <Typography variant="body2">
-                    משך תור (בדקות)
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    הזמן הממוצע לתספורת
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={4}>
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
                   <TextField
-                    type="number"
-                    size="small"
                     fullWidth
+                    label="משך תור (בדקות)"
+                    type="number"
                     value={appointmentDuration}
                     onChange={(e) => setAppointmentDuration(Number(e.target.value))}
-                    InputProps={{ inputProps: { min: 10, max: 120, step: 5 } }}
+                    InputProps={{ inputProps: { min: 5, max: 120, step: 5 } }}
+                    size="small"
                   />
                 </Grid>
               </Grid>
             </Paper>
           </Grid>
-
+          
           {/* Special Days */}
           <Grid item xs={12} md={5}>
             <Paper 
@@ -244,16 +217,17 @@ export default function SettingsPage() {
               sx={{ p: 3 }}
             >
               <Typography variant="h6" gutterBottom>
-                ימים מיוחדים וחגים
+                ימים מיוחדים
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                הוסף ימי חופש, חגים או ימים עם שעות עבודה מיוחדות
+                הגדר ימים מיוחדים כמו חגים או ימים עם שעות פעילות שונות
               </Typography>
               
-              <Box sx={{ mb: 3, p: 2, borderRadius: 1, bgcolor: 'background.default' }}>
+              <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   הוסף יום מיוחד
                 </Typography>
+                
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField
@@ -373,17 +347,20 @@ export default function SettingsPage() {
           </Grid>
         </Grid>
         
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
           <Button
-            component={motion.button}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            variant="outlined"
+            startIcon={<ArrowBack />}
+            onClick={() => router.push('/admin/dashboard')}
+          >
+            חזרה ללוח הבקרה
+          </Button>
+          
+          <Button
             variant="contained"
             color="primary"
-            size="large"
             startIcon={<Save />}
-            onClick={saveSettings}
-            sx={{ px: 5, py: 1.5 }}
+            onClick={handleSaveSettings}
           >
             שמור הגדרות
           </Button>

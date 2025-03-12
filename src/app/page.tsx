@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Box, Container, Typography, Button, Paper, Grid, Alert, Snackbar } from '@mui/material';
-import { CalendarMonth, Person, Notifications } from '@mui/icons-material';
+import { CalendarMonth, Person, Notifications, ContentCut } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { db, checkFirebaseConnection } from '../lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import WorkingHours from './components/WorkingHours';
 
 export default function Home() {
   // Use client-side only rendering to avoid hydration mismatch
@@ -75,12 +76,15 @@ export default function Home() {
             sx={{ textAlign: 'center', mb: 6 }}
           >
             <Typography variant="h2" component="h1" sx={{ color: 'white', fontWeight: 'bold', mb: 2 }}>
-              מערכת זימון תורים
+              מספרת בר ארזי
             </Typography>
-            <Typography variant="h5" sx={{ color: 'white' }}>
-              הזמן תור בקלות ובמהירות
+            <Typography variant="h5" sx={{ color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ContentCut sx={{ mr: 1, transform: 'rotate(90deg)' }} /> עיצוב שיער <ContentCut sx={{ ml: 1, transform: 'rotate(-90deg)' }} />
             </Typography>
           </Box>
+          
+          {/* Working Hours */}
+          <WorkingHours />
           
           {/* Main Content */}
           <Grid container spacing={4} justifyContent="center">
@@ -255,7 +259,7 @@ export default function Home() {
             }}
           >
             <Typography variant="body2">
-              © {new Date().getFullYear()} מערכת זימון תורים לספר | כל הזכויות שמורות
+              © {new Date().getFullYear()} מספרת בר ארזי | כל הזכויות שמורות
             </Typography>
           </Box>
         </Container>

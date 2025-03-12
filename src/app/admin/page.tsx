@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Box, Container, Typography, TextField, Button, Paper, InputAdornment, IconButton } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, ContentCut } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 // This would normally be stored securely in environment variables
@@ -50,9 +50,16 @@ export default function AdminLoginPage() {
             borderRadius: 2,
           }}
         >
-          <Typography variant="h4" component="h1" align="center" gutterBottom sx={{ mb: 4 }}>
-            כניסת מנהל
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              מספרת בר ארזי
+            </Typography>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
+              <ContentCut sx={{ mr: 1, transform: 'rotate(90deg)', fontSize: '1rem' }} /> 
+              כניסת מנהל 
+              <ContentCut sx={{ ml: 1, transform: 'rotate(-90deg)', fontSize: '1rem' }} />
+            </Typography>
+          </Box>
           
           <Box component="form" id="admin-login-form" name="admin-login-form" onSubmit={handleSubmit} noValidate>
             <TextField

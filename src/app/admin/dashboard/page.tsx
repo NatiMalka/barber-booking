@@ -1,360 +1,356 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Container, Typography, Paper, Tabs, Tab, Button, Divider, Chip, Grid, IconButton } from '@mui/material';
-import { Check, Close, CalendarMonth, Person, Schedule, Settings, ExitToApp, Refresh, Phone, Email } from '@mui/icons-material';
+import { useState, useEffect } from 'react';
+import { Box, Container, Typography, Paper, Grid, Button, Card, CardContent, 
+  Divider, List, ListItem, ListItemText, Chip, IconButton, Avatar } from '@mui/material';
+import { Settings, CalendarMonth, Person, ContentCut, CheckCircle, Cancel, AccessTime } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+// Define types for our data
+interface Appointment {
+  id: number;
+  name: string;
+  date: string;
+  time: string;
+  status: 'approved' | 'pending' | 'rejected';
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`tabpanel-${index}`}
-      aria-labelledby={`tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
+interface WorkingHour {
+  day: string;
+  hours: string;
 }
 
-// Sample data - in a real application, this would come from Firebase
-const pendingAppointments = [
-  { id: 1, name: 'דני לוי', date: '15/03/2024', time: '10:00', peopleCount: 1, contactInfo: '050-1234567', notificationMethod: 'WhatsApp' },
-  { id: 2, name: 'רונית כהן', date: '15/03/2024', time: '11:30', peopleCount: 2, contactInfo: 'ronit@example.com', notificationMethod: 'Email' },
-  { id: 3, name: 'יוסי מזרחי', date: '16/03/2024', time: '14:00', peopleCount: 1, contactInfo: '052-9876543', notificationMethod: 'SMS' },
+// Mock data for appointments
+const mockAppointments: Appointment[] = [
+  { id: 1, name: 'דוד כהן', date: '2024-03-15', time: '10:00', status: 'approved' },
+  { id: 2, name: 'יעל לוי', date: '2024-03-15', time: '11:00', status: 'pending' },
+  { id: 3, name: 'משה גולן', date: '2024-03-15', time: '12:00', status: 'approved' },
+  { id: 4, name: 'רונית אברהם', date: '2024-03-16', time: '09:30', status: 'pending' },
+  { id: 5, name: 'אבי כהן', date: '2024-03-16', time: '10:30', status: 'approved' },
 ];
 
-const approvedAppointments = [
-  { id: 4, name: 'דוד ישראלי', date: '14/03/2024', time: '09:00', peopleCount: 1, contactInfo: '054-1122334', notificationMethod: 'WhatsApp' },
-  { id: 5, name: 'מיכל אברהם', date: '14/03/2024', time: '15:30', peopleCount: 3, contactInfo: 'michal@example.com', notificationMethod: 'Email' },
+// Working hours for today
+const workingHours: WorkingHour[] = [
+  { day: 'ימי א - ד', hours: '09:00 - 20:00' },
+  { day: 'יום ה', hours: '08:00 - 21:00' },
+  { day: 'יום ו', hours: '08:00 - 15:00' },
+  { day: 'ערבי חג', hours: 'במתכונת ימי שישי' },
+  { day: 'שבת וחגים', hours: 'סגור' }
 ];
 
-export default function AdminDashboard() {
-  const [tabValue, setTabValue] = useState(0);
+export default function DashboardPage() {
   const router = useRouter();
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  
+  useEffect(() => {
+    // In a real app, this would fetch from Firebase
+    const today = new Date().toISOString().split('T')[0];
+    setTodayAppointments(mockAppointments.filter(app => app.date === '2024-03-15'));
+    setUpcomingAppointments(mockAppointments.filter(app => app.date === '2024-03-16'));
+  }, []);
+  
+  const getStatusColor = (status: Appointment['status']) => {
+    switch(status) {
+      case 'approved': return 'success';
+      case 'pending': return 'warning';
+      case 'rejected': return 'error';
+      default: return 'default';
+    }
   };
-
-  const handleLogout = () => {
-    router.push('/admin');
+  
+  const getStatusText = (status: Appointment['status']) => {
+    switch(status) {
+      case 'approved': return 'מאושר';
+      case 'pending': return 'ממתין לאישור';
+      case 'rejected': return 'נדחה';
+      default: return '';
+    }
   };
-
-  const handleApprove = (id: number) => {
-    // In a real app, this would update the appointment status in Firebase
-    alert(`תור #${id} אושר`);
+  
+  const getStatusIcon = (status: Appointment['status']) => {
+    switch(status) {
+      case 'approved': return <CheckCircle fontSize="small" />;
+      case 'pending': return <AccessTime fontSize="small" />;
+      case 'rejected': return <Cancel fontSize="small" />;
+      default: return undefined;
+    }
   };
-
-  const handleReject = (id: number) => {
-    // In a real app, this would update the appointment status in Firebase
-    alert(`תור #${id} נדחה`);
+  
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
   };
-
+  
   return (
     <Box
-      component={motion.div}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
       sx={{
         minHeight: '100vh',
-        background: '#f5f5f5',
+        py: 4,
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       }}
     >
-      {/* Header */}
-      <Box 
-        sx={{ 
-          background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-          color: 'white',
-          py: 2,
-          px: 3,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h5" component="h1">
-          ממשק ניהול תורים
-        </Typography>
-        <Button 
-          startIcon={<ExitToApp />}
-          variant="outlined" 
-          color="inherit"
-          onClick={handleLogout}
+      <Container maxWidth="lg">
+        {/* Header */}
+        <Box 
+          component={motion.div}
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          sx={{ mb: 4, textAlign: 'center' }}
         >
-          התנתק
-        </Button>
-      </Box>
-
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
+          <Typography variant="h3" component="h1" gutterBottom>
+            מספרת בר ארזי
+          </Typography>
+          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
+            <ContentCut sx={{ mr: 1, transform: 'rotate(90deg)', fontSize: '1rem' }} /> 
+            לוח בקרה 
+            <ContentCut sx={{ ml: 1, transform: 'rotate(-90deg)', fontSize: '1rem' }} />
+          </Typography>
+        </Box>
+        
         <Grid container spacing={3}>
-          {/* Sidebar */}
-          <Grid item xs={12} md={3}>
+          {/* Today's Summary */}
+          <Grid item xs={12} md={8}>
             <Paper 
               component={motion.div}
-              initial={{ x: -50, opacity: 0 }}
+              initial={{ x: -30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              elevation={2} 
-              sx={{ p: 2, mb: 3 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              sx={{ p: 3, height: '100%' }}
             >
-              <Box sx={{ textAlign: 'center', mb: 2 }}>
-                <Person sx={{ fontSize: 60, color: 'primary.main' }} />
-                <Typography variant="h6">ברוך הבא, ספר</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  התורים להיום
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {new Date().toLocaleDateString('he-IL')}
+                  {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </Typography>
               </Box>
+              
               <Divider sx={{ mb: 2 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">תורים להיום:</Typography>
-                <Chip label="2" color="primary" size="small" />
+              
+              {todayAppointments.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    אין תורים מתוכננים להיום
+                  </Typography>
+                </Box>
+              ) : (
+                <List>
+                  {todayAppointments.map((appointment) => (
+                    <ListItem 
+                      key={appointment.id}
+                      component={motion.li}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      sx={{ 
+                        mb: 1, 
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                      secondaryAction={
+                        <Box>
+                          <Chip 
+                            size="small"
+                            label={getStatusText(appointment.status)}
+                            color={getStatusColor(appointment.status) as any}
+                            icon={getStatusIcon(appointment.status)}
+                            sx={{ mr: 1 }}
+                          />
+                          {appointment.status === 'pending' && (
+                            <>
+                              <IconButton size="small" color="success">
+                                <CheckCircle fontSize="small" />
+                              </IconButton>
+                              <IconButton size="small" color="error">
+                                <Cancel fontSize="small" />
+                              </IconButton>
+                            </>
+                          )}
+                        </Box>
+                      }
+                    >
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'primary.main' }}>
+                              {appointment.name.charAt(0)}
+                            </Avatar>
+                            <Typography variant="body1">{appointment.name}</Typography>
+                          </Box>
+                        }
+                        secondary={`שעה: ${appointment.time}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+              
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Button 
+                  variant="outlined" 
+                  color="primary"
+                  onClick={() => router.push('/admin/appointments')}
+                >
+                  צפה בכל התורים
+                </Button>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">בקשות ממתינות:</Typography>
-                <Chip label="3" color="warning" size="small" />
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">סה"כ תורים השבוע:</Typography>
-                <Chip label="12" color="default" size="small" />
-              </Box>
-            </Paper>
-
-            <Paper 
-              component={motion.div}
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              elevation={2} 
-              sx={{ p: 2 }}
-            >
-              <Typography variant="subtitle1" gutterBottom>
-                פעולות מהירות
-              </Typography>
-              <Button 
-                fullWidth 
-                startIcon={<Settings />}
-                variant="outlined" 
-                sx={{ mb: 1 }}
-                href="/admin/settings"
-              >
-                הגדרות זמינות
-              </Button>
-              <Button 
-                fullWidth 
-                startIcon={<Refresh />}
-                variant="outlined"
-                onClick={() => alert('רענון נתונים')}
-              >
-                רענן נתונים
-              </Button>
             </Paper>
           </Grid>
-
-          {/* Main Content */}
-          <Grid item xs={12} md={9}>
+          
+          {/* Quick Info */}
+          <Grid item xs={12} md={4}>
+            <Grid container spacing={3} direction="column">
+              <Grid item>
+                <Paper 
+                  component={motion.div}
+                  initial={{ x: 30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  sx={{ p: 3 }}
+                >
+                  <Typography variant="h6" gutterBottom>
+                    שעות פעילות
+                  </Typography>
+                  
+                  <List dense>
+                    {workingHours.map((item, index) => (
+                      <ListItem 
+                        key={index}
+                        sx={{ 
+                          py: 0.5,
+                          borderBottom: index < workingHours.length - 1 ? '1px dashed rgba(0,0,0,0.1)' : 'none'
+                        }}
+                      >
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <Typography variant="body2" fontWeight={item.day === 'שבת וחגים' ? 'bold' : 'normal'}>
+                                {item.day}
+                              </Typography>
+                              <Typography 
+                                variant="body2" 
+                                color={item.day === 'שבת וחגים' ? 'error.main' : 'text.primary'}
+                                fontWeight={item.day === 'שבת וחגים' ? 'bold' : 'normal'}
+                              >
+                                {item.hours}
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              </Grid>
+              
+              <Grid item>
+                <Paper 
+                  component={motion.div}
+                  initial={{ x: 30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  sx={{ p: 3 }}
+                >
+                  <Typography variant="h6" gutterBottom>
+                    פעולות מהירות
+                  </Typography>
+                  
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<Settings />}
+                    onClick={() => router.push('/admin/settings')}
+                    sx={{ mb: 2 }}
+                  >
+                    הגדרות זמינות
+                  </Button>
+                  
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<CalendarMonth />}
+                    onClick={() => router.push('/admin/appointments')}
+                    sx={{ mb: 2 }}
+                  >
+                    ניהול תורים
+                  </Button>
+                  
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<Person />}
+                    onClick={() => router.push('/admin/clients')}
+                  >
+                    ניהול לקוחות
+                  </Button>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+          
+          {/* Upcoming Appointments */}
+          <Grid item xs={12}>
             <Paper 
               component={motion.div}
-              initial={{ y: 50, opacity: 0 }}
+              initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              elevation={2}
+              sx={{ p: 3 }}
             >
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs 
-                  value={tabValue} 
-                  onChange={handleTabChange} 
-                  aria-label="appointment tabs"
-                  variant="fullWidth"
-                >
-                  <Tab icon={<Schedule />} label="בקשות ממתינות" />
-                  <Tab icon={<CalendarMonth />} label="תורים מאושרים" />
-                </Tabs>
-              </Box>
-
-              {/* Pending Requests Tab */}
-              <TabPanel value={tabValue} index={0}>
-                <Box 
-                  component={motion.div}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Typography variant="h6" gutterBottom>
-                    בקשות לתיאום תור ({pendingAppointments.length})
-                  </Typography>
-                  
-                  {pendingAppointments.length === 0 ? (
-                    <Typography variant="body1" align="center" sx={{ py: 4 }}>
-                      אין בקשות ממתינות כרגע
-                    </Typography>
-                  ) : (
-                    pendingAppointments.map((appointment) => (
-                      <Paper 
-                        key={appointment.id} 
-                        sx={{ p: 2, mb: 2, borderRight: 4, borderColor: 'warning.main' }}
+              <Typography variant="h6" gutterBottom>
+                תורים קרובים
+              </Typography>
+              
+              <Divider sx={{ mb: 2 }} />
+              
+              <Grid container spacing={2}>
+                {upcomingAppointments.length === 0 ? (
+                  <Grid item xs={12}>
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="body1" color="text.secondary">
+                        אין תורים קרובים
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ) : (
+                  upcomingAppointments.map((appointment) => (
+                    <Grid item xs={12} sm={6} md={4} key={appointment.id}>
+                      <Card 
+                        variant="outlined"
                         component={motion.div}
-                        whileHover={{ y: -5, boxShadow: 3 }}
+                        whileHover={{ y: -5, boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}
                       >
-                        <Grid container alignItems="center" spacing={2}>
-                          <Grid item xs={12} sm={5}>
+                        <CardContent>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                             <Typography variant="subtitle1">{appointment.name}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {appointment.date} | {appointment.time}
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                              <Chip 
-                                size="small" 
-                                label={`${appointment.peopleCount} אנשים`} 
-                                color="primary" 
-                                sx={{ mr: 1 }} 
-                              />
-                            </Box>
-                          </Grid>
-                          <Grid item xs={12} sm={4}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              {appointment.notificationMethod === 'Email' ? (
-                                <Email fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                              ) : (
-                                <Phone fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                              )}
-                              <Typography variant="body2" noWrap>
-                                {appointment.contactInfo}
-                              </Typography>
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              התראה: {appointment.notificationMethod}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <IconButton 
-                              color="success" 
-                              onClick={() => handleApprove(appointment.id)}
-                              sx={{ mr: 1 }}
-                            >
-                              <Check />
-                            </IconButton>
-                            <IconButton 
-                              color="error" 
-                              onClick={() => handleReject(appointment.id)}
-                            >
-                              <Close />
-                            </IconButton>
-                          </Grid>
-                        </Grid>
-                      </Paper>
-                    ))
-                  )}
-                </Box>
-              </TabPanel>
-
-              {/* Approved Appointments Tab */}
-              <TabPanel value={tabValue} index={1}>
-                <Box 
-                  component={motion.div}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Typography variant="h6" gutterBottom>
-                    תורים מאושרים ({approvedAppointments.length})
-                  </Typography>
-                  
-                  {approvedAppointments.length === 0 ? (
-                    <Typography variant="body1" align="center" sx={{ py: 4 }}>
-                      אין תורים מאושרים כרגע
-                    </Typography>
-                  ) : (
-                    approvedAppointments.map((appointment) => (
-                      <Paper 
-                        key={appointment.id} 
-                        sx={{ p: 2, mb: 2, borderRight: 4, borderColor: 'success.main' }}
-                        component={motion.div}
-                        whileHover={{ y: -5, boxShadow: 3 }}
-                      >
-                        <Grid container alignItems="center" spacing={2}>
-                          <Grid item xs={12} sm={5}>
-                            <Typography variant="subtitle1">{appointment.name}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {appointment.date} | {appointment.time}
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                              <Chip 
-                                size="small" 
-                                label={`${appointment.peopleCount} אנשים`} 
-                                color="primary" 
-                                sx={{ mr: 1 }} 
-                              />
-                            </Box>
-                          </Grid>
-                          <Grid item xs={12} sm={4}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              {appointment.notificationMethod === 'Email' ? (
-                                <Email fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                              ) : (
-                                <Phone fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                              )}
-                              <Typography variant="body2" noWrap>
-                                {appointment.contactInfo}
-                              </Typography>
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              התראה: {appointment.notificationMethod}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
-                              variant="outlined"
-                              color="error"
+                            <Chip 
                               size="small"
-                              onClick={() => alert(`ביטול תור #${appointment.id}`)}
-                            >
-                              בטל תור
-                            </Button>
-                          </Grid>
-                        </Grid>
-                      </Paper>
-                    ))
-                  )}
-                </Box>
-              </TabPanel>
+                              label={getStatusText(appointment.status)}
+                              color={getStatusColor(appointment.status)}
+                              icon={getStatusIcon(appointment.status)}
+                            />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            {formatDate(appointment.date)}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            שעה: {appointment.time}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))
+                )}
+              </Grid>
             </Paper>
           </Grid>
         </Grid>
       </Container>
-
-      {/* Footer */}
-      <Box 
-        component="footer" 
-        sx={{ 
-          background: '#e0e0e0', 
-          py: 2, 
-          textAlign: 'center',
-          position: 'fixed',
-          bottom: 0,
-          width: '100%',
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} מערכת זימון תורים לספר | גרסה 1.0
-        </Typography>
-      </Box>
     </Box>
   );
 } 

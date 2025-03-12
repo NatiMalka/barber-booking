@@ -10,8 +10,8 @@ const notoSansHebrew = Noto_Sans_Hebrew({
 });
 
 export const metadata: Metadata = {
-  title: "מערכת זימון תורים לספר",
-  description: "מערכת מודרנית לזימון תורים לספר",
+  title: "מספרת בר ארזי - מערכת זימון תורים",
+  description: "מערכת זימון תורים למספרת בר ארזי - עיצוב שיער",
 };
 
 export default function RootLayout({

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Grid, TextField, MenuItem, Button, Typography, Stepper, Step, StepLabel, InputLabel, FormControl, Alert, Snackbar, Paper, Divider } from '@mui/material';
-import { CheckCircleOutline, Close as CloseIcon } from '@mui/icons-material';
+import { useState, useEffect } from 'react';
+import { Box, Grid, TextField, MenuItem, Button, Typography, Stepper, Step, StepLabel, InputLabel, FormControl, Alert, Snackbar, Paper, Divider, FormHelperText } from '@mui/material';
+import { CheckCircleOutline, Close as CloseIcon, ErrorOutline } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -12,6 +12,17 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/he'; // Import Hebrew locale for dayjs
 
 const steps = ['בחירת תאריך ושעה', 'פרטים נוספים', 'סיכום'];
+
+// שעות העבודה של המספרה
+const workingHours = {
+  0: { start: '09:00', end: '20:00' }, // יום ראשון
+  1: { start: '09:00', end: '20:00' }, // יום שני
+  2: { start: '09:00', end: '20:00' }, // יום שלישי
+  3: { start: '09:00', end: '20:00' }, // יום רביעי
+  4: { start: '08:00', end: '21:00' }, // יום חמישי
+  5: { start: '08:00', end: '15:00' }, // יום שישי
+  6: { start: '', end: '' }, // יום שבת - סגור
+};
 
 export default function BookingForm() {
   const [activeStep, setActiveStep] = useState(0);
@@ -23,8 +34,12 @@ export default function BookingForm() {
   const [name, setName] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [timeError, setTimeError] = useState<string | null>(null);
 
   const handleNext = () => {
+    if (activeStep === 0 && !isTimeValid()) {
+      return;
+    }
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -52,7 +67,48 @@ export default function BookingForm() {
     setIsSubmitted(false);
   };
 
-  const isStepOneValid = date && time;
+  // בדיקה האם התאריך והשעה שנבחרו תקינים
+  const isTimeValid = () => {
+    if (!date || !time) return true; // אם לא נבחר תאריך או שעה, אין צורך בבדיקה
+    
+    const dayOfWeek = date.day();
+    
+    // בדיקה אם יום שבת (סגור)
+    if (dayOfWeek === 6) {
+      setTimeError('המספרה סגורה בימי שבת');
+      return false;
+    }
+    
+    const selectedHour = time.hour();
+    const selectedMinute = time.minute();
+    
+    // המרת שעות העבודה לפורמט של דקות מתחילת היום
+    const dayHours = workingHours[dayOfWeek as keyof typeof workingHours];
+    const [startHour, startMinute] = dayHours.start.split(':').map(Number);
+    const [endHour, endMinute] = dayHours.end.split(':').map(Number);
+    
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
+    const selectedTimeInMinutes = selectedHour * 60 + selectedMinute;
+    
+    // בדיקה אם השעה שנבחרה היא מחוץ לשעות העבודה
+    if (selectedTimeInMinutes < startTimeInMinutes || selectedTimeInMinutes > endTimeInMinutes) {
+      setTimeError(`שעות הפעילות ביום זה הן ${dayHours.start} - ${dayHours.end}`);
+      return false;
+    }
+    
+    setTimeError(null);
+    return true;
+  };
+
+  // בדיקת תקינות בכל פעם שמשתנה התאריך או השעה
+  useEffect(() => {
+    if (date && time) {
+      isTimeValid();
+    }
+  }, [date, time]);
+
+  const isStepOneValid = date && time && !timeError;
   const isStepTwoValid = name && contactInfo;
 
   // If the form is submitted, show a success page
@@ -63,87 +119,215 @@ export default function BookingForm() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        sx={{ textAlign: 'center', py: 4 }}
+        sx={{ 
+          textAlign: 'center', 
+          py: 4,
+          minHeight: '60vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
+        }}
       >
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxWidth: 600, mx: 'auto', position: 'relative' }}>
-          <CheckCircleOutline 
-            color="success" 
+        <Paper 
+          elevation={4} 
+          sx={{ 
+            p: { xs: 3, md: 5 }, 
+            borderRadius: 3, 
+            maxWidth: 650, 
+            mx: 'auto', 
+            position: 'relative',
+            background: 'linear-gradient(to bottom, #ffffff, #f9f9f9)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+          }}
+        >
+          <Box 
             sx={{ 
-              fontSize: 80, 
-              mb: 2,
-              animation: 'pulse 1.5s infinite',
-              '@keyframes pulse': {
-                '0%': { transform: 'scale(1)' },
-                '50%': { transform: 'scale(1.1)' },
-                '100%': { transform: 'scale(1)' },
-              }
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              height: '8px', 
+              background: 'linear-gradient(90deg, #4caf50, #8bc34a)',
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12
             }} 
           />
           
-          <Typography variant="h4" gutterBottom color="primary">
+          <Box 
+            component={motion.div}
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            sx={{ 
+              width: 100, 
+              height: 100, 
+              borderRadius: '50%', 
+              background: 'rgba(76, 175, 80, 0.1)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 3
+            }}
+          >
+            <CheckCircleOutline 
+              color="success" 
+              sx={{ 
+                fontSize: 60,
+                animation: 'pulse 2s infinite',
+                '@keyframes pulse': {
+                  '0%': { transform: 'scale(1)', opacity: 1 },
+                  '50%': { transform: 'scale(1.1)', opacity: 0.8 },
+                  '100%': { transform: 'scale(1)', opacity: 1 },
+                }
+              }} 
+            />
+          </Box>
+          
+          <Typography 
+            variant="h4" 
+            gutterBottom 
+            color="primary"
+            component={motion.h2}
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            sx={{ fontWeight: 'bold', mb: 2 }}
+          >
             הבקשה נשלחה בהצלחה!
           </Typography>
           
-          <Typography variant="body1" paragraph>
+          <Typography 
+            variant="body1" 
+            paragraph
+            component={motion.p}
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            sx={{ mb: 4, color: 'text.secondary', fontSize: '1.1rem' }}
+          >
             אנו ניצור איתך קשר עם אישור התור באמצעות {notificationMethod}.
           </Typography>
           
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 4 }} />
           
-          <Typography variant="h6" gutterBottom>
-            פרטי ההזמנה:
-          </Typography>
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 3, 
+                fontWeight: 500,
+                display: 'inline-block',
+                borderBottom: '2px solid #4caf50',
+                paddingBottom: 1
+              }}
+            >
+              פרטי ההזמנה
+            </Typography>
+            
+            <Paper 
+              variant="outlined" 
+              sx={{ 
+                p: 3, 
+                borderRadius: 2, 
+                background: 'rgba(0,0,0,0.02)',
+                mb: 4
+              }}
+            >
+              <Box>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 1.5,
+                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>שם:</Typography>
+                  <Typography variant="body1" fontWeight="medium">{name}</Typography>
+                </Box>
+                
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 1.5,
+                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>תאריך:</Typography>
+                  <Typography variant="body1" fontWeight="medium">{date?.format('DD/MM/YYYY')}</Typography>
+                </Box>
+                
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 1.5,
+                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>שעה:</Typography>
+                  <Typography variant="body1" fontWeight="medium">{time?.format('HH:mm')}</Typography>
+                </Box>
+                
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 1.5,
+                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>כמות אנשים:</Typography>
+                  <Typography variant="body1" fontWeight="medium">{peopleCount}</Typography>
+                </Box>
+                
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 1.5,
+                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>אמצעי התראה:</Typography>
+                  <Typography variant="body1" fontWeight="medium">{notificationMethod}</Typography>
+                </Box>
+                
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 1.5
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>פרטי קשר:</Typography>
+                  <Typography variant="body1" fontWeight="medium">{contactInfo}</Typography>
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
           
-          <Grid container spacing={2} sx={{ mt: 2, textAlign: 'right' }}>
-            <Grid item xs={6}>
-              <Typography variant="subtitle1" fontWeight="bold">שם:</Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body1">{name}</Typography>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Typography variant="subtitle1" fontWeight="bold">תאריך:</Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body1">{date?.format('DD/MM/YYYY')}</Typography>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Typography variant="subtitle1" fontWeight="bold">שעה:</Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body1">{time?.format('HH:mm')}</Typography>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Typography variant="subtitle1" fontWeight="bold">כמות אנשים:</Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body1">{peopleCount}</Typography>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Typography variant="subtitle1" fontWeight="bold">אמצעי התראה:</Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body1">{notificationMethod}</Typography>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Typography variant="subtitle1" fontWeight="bold">פרטי קשר:</Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body1">{contactInfo}</Typography>
-            </Grid>
-          </Grid>
-          
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
+          <Box 
+            sx={{ 
+              mt: 4, 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: 2,
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}
+          >
             <Button
               variant="contained"
               color="primary"
               onClick={resetForm}
               startIcon={<CloseIcon />}
+              sx={{ 
+                py: 1.5, 
+                px: 3, 
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)'
+              }}
             >
               סגור וחזור לטופס
             </Button>
@@ -152,6 +336,7 @@ export default function BookingForm() {
               variant="outlined"
               color="primary"
               onClick={() => window.location.href = '/'}
+              sx={{ py: 1.5, px: 3, borderRadius: 2 }}
             >
               חזור לדף הבית
             </Button>
@@ -164,7 +349,13 @@ export default function BookingForm() {
           onClose={() => setShowSuccessMessage(false)}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <Alert severity="success" sx={{ width: '100%' }}>
+          <Alert 
+            severity="success" 
+            sx={{ 
+              width: '100%',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            }}
+          >
             הבקשה נשלחה בהצלחה!
           </Alert>
         </Snackbar>
@@ -186,16 +377,21 @@ export default function BookingForm() {
                 <DatePicker
                   label="תאריך"
                   value={date}
-                  onChange={(newValue) => setDate(newValue)}
+                  onChange={(newValue) => {
+                    setDate(newValue);
+                    setTimeError(null); // איפוס שגיאות בעת שינוי תאריך
+                  }}
                   sx={{ width: '100%' }}
                   disablePast
+                  shouldDisableDate={(date) => date.day() === 6} // חסימת ימי שבת
                   slotProps={{
                     textField: {
                       id: "booking-date",
                       name: "booking-date",
                       inputProps: {
                         'aria-label': 'תאריך'
-                      }
+                      },
+                      helperText: "ימי שבת וחגים המספרה סגורה"
                     }
                   }}
                 />
@@ -204,7 +400,10 @@ export default function BookingForm() {
                 <TimePicker
                   label="שעה"
                   value={time}
-                  onChange={(newValue) => setTime(newValue)}
+                  onChange={(newValue) => {
+                    setTime(newValue);
+                    setTimeError(null); // איפוס שגיאות בעת שינוי שעה
+                  }}
                   sx={{ width: '100%' }}
                   slotProps={{
                     textField: {
@@ -212,10 +411,31 @@ export default function BookingForm() {
                       name: "booking-time",
                       inputProps: {
                         'aria-label': 'שעה'
-                      }
+                      },
+                      error: !!timeError,
+                      helperText: timeError || "בחר שעה בהתאם לשעות הפעילות"
                     }
                   }}
                 />
+              </Grid>
+              {timeError && (
+                <Grid item xs={12}>
+                  <Alert 
+                    severity="error" 
+                    icon={<ErrorOutline />}
+                    sx={{ mt: 1 }}
+                  >
+                    {timeError}
+                  </Alert>
+                </Grid>
+              )}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  שעות פעילות:
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  ימים א-ד: 09:00-20:00 | יום ה: 08:00-21:00 | יום ו: 08:00-15:00 | שבת: סגור
+                </Typography>
               </Grid>
             </Grid>
           </Box>
