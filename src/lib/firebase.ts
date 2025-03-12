@@ -3,14 +3,14 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-// TODO: Replace with your own Firebase config
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDWNHL-dQZayHhVS51U1z_0u1V1uLKtzkA",
+  authDomain: "barber-booking-bf41f.firebaseapp.com",
+  projectId: "barber-booking-bf41f",
+  storageBucket: "barber-booking-bf41f.firebasestorage.app",
+  messagingSenderId: "265481537358",
+  appId: "1:265481537358:web:93c5b6f36e8258dc5e401f"
 };
 
 // Initialize Firebase
