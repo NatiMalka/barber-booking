@@ -7,13 +7,13 @@ const nextConfig: NextConfig = {
   // Enable static exports for GitHub Pages
   output: 'export',
   // Set the base path to the repository name for GitHub Pages
-  basePath: '/barber-booking',
+  basePath: '',
   // Disable image optimization since it's not compatible with static exports
   images: {
     unoptimized: true,
   },
   // Fix for static assets in GitHub Pages
-  assetPrefix: '/barber-booking',
+  assetPrefix: '',
   // Ensure trailing slashes for better compatibility
   trailingSlash: true,
   // Disable ESLint during build to avoid errors
