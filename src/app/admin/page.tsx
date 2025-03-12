@@ -1,0 +1,114 @@
+'use client';
+
+import { useState } from 'react';
+import { Box, Container, Typography, TextField, Button, Paper, InputAdornment, IconButton } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+
+// This would normally be stored securely in environment variables
+const ADMIN_PASSWORD = 'admin123';
+
+export default function AdminLoginPage() {
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      // Navigate to dashboard on successful login
+      router.push('/admin/dashboard');
+    } else {
+      setError(true);
+    }
+  };
+
+  return (
+    <Box
+      component={motion.div}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      sx={{
+        minHeight: '100vh',
+        py: 4,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper
+          component={motion.div}
+          initial={{ y: -50 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          elevation={3}
+          sx={{
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h4" component="h1" align="center" gutterBottom sx={{ mb: 4 }}>
+            כניסת מנהל
+          </Typography>
+          
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="סיסמה"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError(false);
+              }}
+              error={error}
+              helperText={error ? 'סיסמה שגויה' : ''}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            
+            <Button
+              component={motion.button}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{ mt: 4, mb: 2 }}
+            >
+              כניסה
+            </Button>
+            
+            <Button
+              fullWidth
+              variant="outlined"
+              href="/"
+              sx={{ mt: 1 }}
+            >
+              חזור לדף הבית
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
+  );
+} 
