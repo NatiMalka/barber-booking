@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 import 'dayjs/locale/he'; // Import Hebrew locale for dayjs
 
-const steps = ['בחירת תאריך ושעה', 'פרטים נוספים', 'סיכום'];
+const steps = ['פרטים אישיים', 'בחירת תאריך ושעה', 'סיכום'];
 
 // שעות העבודה של המספרה
 const workingHours = {
@@ -59,7 +59,7 @@ export default function BookingForm() {
   };
 
   const handleNext = () => {
-    if (activeStep === 0 && !isTimeValid()) {
+    if (activeStep === 1 && !isTimeValid()) {
       return;
     }
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -138,8 +138,8 @@ export default function BookingForm() {
     }
   }, [date]);
 
-  const isStepOneValid = date && time && !timeError;
-  const isStepTwoValid = name && contactInfo;
+  const isStepOneValid = name && contactInfo;
+  const isStepTwoValid = date && time && !timeError;
 
   return (
     <Box sx={{ width: '100%', mt: 4 }}>
@@ -155,6 +155,71 @@ export default function BookingForm() {
 
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             {activeStep === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Typography variant="h6" gutterBottom align="center">
+                  פרטים אישיים
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="name"
+                      name="name"
+                      label="שם מלא"
+                      fullWidth
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="people-count"
+                      name="people-count"
+                      label="מספר מסתפרים"
+                      type="number"
+                      fullWidth
+                      InputProps={{ inputProps: { min: 1, max: 10 } }}
+                      value={peopleCount}
+                      onChange={(e) => setPeopleCount(parseInt(e.target.value))}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="notification-method"
+                      name="notification-method"
+                      select
+                      label="שיטת התראה מועדפת"
+                      fullWidth
+                      value={notificationMethod}
+                      onChange={(e) => setNotificationMethod(e.target.value)}
+                    >
+                      <MenuItem value="WhatsApp">WhatsApp</MenuItem>
+                      <MenuItem value="SMS">SMS</MenuItem>
+                      <MenuItem value="Email">אימייל</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      id="contact-info"
+                      name="contact-info"
+                      label={notificationMethod === 'Email' ? 'כתובת אימייל' : 'מספר טלפון'}
+                      fullWidth
+                      required
+                      value={contactInfo}
+                      onChange={(e) => setContactInfo(e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
+              </motion.div>
+            )}
+
+            {activeStep === 1 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -234,71 +299,6 @@ export default function BookingForm() {
               </motion.div>
             )}
 
-            {activeStep === 1 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Typography variant="h6" gutterBottom align="center">
-                  פרטים נוספים
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                
-                <Grid container spacing={3}>
-                  <Grid item xs={12}>
-                    <TextField
-                      id="name"
-                      name="name"
-                      label="שם מלא"
-                      fullWidth
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      id="people-count"
-                      name="people-count"
-                      label="מספר אנשים"
-                      type="number"
-                      fullWidth
-                      InputProps={{ inputProps: { min: 1, max: 10 } }}
-                      value={peopleCount}
-                      onChange={(e) => setPeopleCount(parseInt(e.target.value))}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      id="notification-method"
-                      name="notification-method"
-                      select
-                      label="שיטת התראה מועדפת"
-                      fullWidth
-                      value={notificationMethod}
-                      onChange={(e) => setNotificationMethod(e.target.value)}
-                    >
-                      <MenuItem value="WhatsApp">WhatsApp</MenuItem>
-                      <MenuItem value="SMS">SMS</MenuItem>
-                      <MenuItem value="Email">אימייל</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      id="contact-info"
-                      name="contact-info"
-                      label={notificationMethod === 'Email' ? 'כתובת אימייל' : 'מספר טלפון'}
-                      fullWidth
-                      required
-                      value={contactInfo}
-                      onChange={(e) => setContactInfo(e.target.value)}
-                    />
-                  </Grid>
-                </Grid>
-              </motion.div>
-            )}
-
             {activeStep === 2 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -312,20 +312,20 @@ export default function BookingForm() {
                 
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1">שם:</Typography>
+                    <Typography variant="body1">{name}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle1">מספר מסתפרים:</Typography>
+                    <Typography variant="body1">{peopleCount}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
                     <Typography variant="subtitle1">תאריך:</Typography>
                     <Typography variant="body1">{date?.format('DD/MM/YYYY')}</Typography>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Typography variant="subtitle1">שעה:</Typography>
                     <Typography variant="body1">{time?.format('HH:mm')}</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle1">שם:</Typography>
-                    <Typography variant="body1">{name}</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle1">מספר אנשים:</Typography>
-                    <Typography variant="body1">{peopleCount}</Typography>
                   </Grid>
                   <Grid item xs={12}>
                     <Typography variant="subtitle1">פרטי התקשרות:</Typography>
@@ -350,7 +350,7 @@ export default function BookingForm() {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  disabled={!isStepTwoValid}
+                  disabled={!isStepOneValid || !isStepTwoValid}
                 >
                   שליחת בקשה
                 </Button>
@@ -406,7 +406,7 @@ export default function BookingForm() {
                   <Typography variant="body2">{name}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="subtitle2">מספר אנשים:</Typography>
+                  <Typography variant="subtitle2">מספר מסתפרים:</Typography>
                   <Typography variant="body2">{peopleCount}</Typography>
                 </Grid>
                 <Grid item xs={6}>
