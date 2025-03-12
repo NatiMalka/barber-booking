@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // We'll handle RTL and Hebrew support at the component level instead
   reactStrictMode: true,
   swcMinify: true,
-  output: 'export',
+  // Removing the static export to enable dynamic routing
 };
 
 export default nextConfig;

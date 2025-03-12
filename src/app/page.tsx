@@ -1,10 +1,59 @@
-import { Box, Container, Typography, Button, Paper, Grid } from '@mui/material';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Box, Container, Typography, Button, Paper, Grid, Alert, Snackbar } from '@mui/material';
 import { CalendarMonth, Person, Notifications } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { db, checkFirebaseConnection } from '../lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 export default function Home() {
+  // Use client-side only rendering to avoid hydration mismatch
+  const [mounted, setMounted] = useState(false);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Mark as mounted after hydration
+    setMounted(true);
+    
+    // Test Firebase connection
+    const testFirebaseConnection = async () => {
+      try {
+        // Check if Firebase is blocked
+        const connectionStatus = await checkFirebaseConnection();
+        if (!connectionStatus.connected) {
+          setFirebaseError(connectionStatus.error);
+          return;
+        }
+
+        // If not blocked, try to access Firestore
+        const testCollection = collection(db, 'test');
+        await getDocs(testCollection);
+        console.log('Successfully connected to Firebase!');
+      } catch (error) {
+        console.error('Error connecting to Firebase:', error);
+        setFirebaseError('Error connecting to Firebase. This might be due to an ad blocker or privacy extension.');
+      }
+    };
+
+    testFirebaseConnection();
+  }, []);
+
+  // During SSR and initial client render, return a simple placeholder
+  if (!mounted) {
+    return <div style={{ visibility: 'hidden' }}>Loading...</div>;
+  }
+
+  // Only render the full UI after hydration
   return (
     <main>
+      {/* Firebase Error Alert */}
+      <Snackbar open={!!firebaseError} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert severity="warning" sx={{ width: '100%' }}>
+          {firebaseError}
+        </Alert>
+      </Snackbar>
+
       <Box
         component={motion.div}
         initial={{ opacity: 0 }}
@@ -68,7 +117,7 @@ export default function Home() {
                     whileTap={{ scale: 0.95 }}
                     variant="contained" 
                     size="large" 
-                    href="/client"
+                    onClick={() => window.location.href = '/client'}
                     sx={{ 
                       px: 4, 
                       py: 1.5, 
@@ -116,7 +165,7 @@ export default function Home() {
                     variant="contained" 
                     color="secondary" 
                     size="large" 
-                    href="/admin"
+                    onClick={() => window.location.href = '/admin'}
                     sx={{ 
                       px: 4, 
                       py: 1.5, 

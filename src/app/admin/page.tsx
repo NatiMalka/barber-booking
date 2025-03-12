@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Box, Container, Typography, TextField, Button, Paper, InputAdornment, IconButton } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 // This would normally be stored securely in environment variables
@@ -13,13 +12,12 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
-      // Navigate to dashboard on successful login
-      router.push('/admin/dashboard');
+      // Navigate to dashboard on successful login using direct navigation
+      window.location.href = '/admin/dashboard';
     } else {
       setError(true);
     }
@@ -56,8 +54,10 @@ export default function AdminLoginPage() {
             כניסת מנהל
           </Typography>
           
-          <Box component="form" onSubmit={handleSubmit} noValidate>
+          <Box component="form" id="admin-login-form" name="admin-login-form" onSubmit={handleSubmit} noValidate>
             <TextField
+              id="admin-password"
+              name="admin-password"
               fullWidth
               margin="normal"
               label="סיסמה"
@@ -73,6 +73,7 @@ export default function AdminLoginPage() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
+                      id="toggle-password-visibility"
                       aria-label="toggle password visibility"
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
@@ -82,9 +83,14 @@ export default function AdminLoginPage() {
                   </InputAdornment>
                 ),
               }}
+              inputProps={{
+                'aria-label': 'סיסמה'
+              }}
             />
             
             <Button
+              id="admin-login-submit"
+              name="admin-login-submit"
               component={motion.button}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -99,9 +105,11 @@ export default function AdminLoginPage() {
             </Button>
             
             <Button
+              id="back-to-home"
+              name="back-to-home"
               fullWidth
               variant="outlined"
-              href="/"
+              onClick={() => window.location.href = '/'}
               sx={{ mt: 1 }}
             >
               חזור לדף הבית

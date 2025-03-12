@@ -1,3 +1,5 @@
+'use client';
+
 import { Box, Container, Typography, Paper, Stepper, Step, StepLabel, Button } from '@mui/material';
 import BookingForm from './components/BookingForm';
 import ConfirmationPage from './components/ConfirmationPage';
@@ -27,7 +29,7 @@ export default function ClientPage() {
         </Paper>
         
         <Box mt={4} textAlign="center">
-          <Button variant="outlined" href="/" sx={{ mx: 1 }}>
+          <Button variant="outlined" onClick={() => window.location.href = '/'} sx={{ mx: 1 }}>
             חזור לדף הבית
           </Button>
         </Box>
