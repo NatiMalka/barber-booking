@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${notoSansHebrew.variable} antialiased`}>
+      <body className={`${notoSansHebrew.variable} antialiased animated-gradient-bg`}>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

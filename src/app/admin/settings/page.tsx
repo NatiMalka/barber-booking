@@ -90,13 +90,26 @@ export default function SettingsPage() {
   };
 
   return (
-    <Box
-      sx={{
+    <Box 
+      sx={{ 
+        p: 3,
         minHeight: '100vh',
-        py: 4,
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       }}
     >
+      <Typography 
+        variant="h4" 
+        component="h1" 
+        gutterBottom 
+        sx={{ 
+          textAlign: 'center', 
+          mb: 4,
+          fontWeight: 'bold',
+          color: '#1e3c72'
+        }}
+      >
+        הגדרות
+      </Typography>
       <Container maxWidth="lg">
         {showSuccessAlert && (
           <Box

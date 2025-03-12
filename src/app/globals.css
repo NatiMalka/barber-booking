@@ -1,26 +1,141 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #1e3c72;
+  --primary-dark: #0a1f44;
+  --primary-light: #2a5298;
+  --accent: #4776e6;
+  --accent-light: #8e9efc;
+  --accent-dark: #2756c4;
+  --text-light: #ffffff;
+  --text-dark: #333333;
+  --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  --card-gradient: linear-gradient(145deg, rgba(42, 82, 152, 0.8) 0%, rgba(30, 60, 114, 0.9) 100%);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--primary);
+  --color-foreground: var(--text-light);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --primary: #1e3c72;
+    --primary-dark: #0a1f44;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  color: var(--text-dark);
+  background-color: var(--primary);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Animations */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animated-gradient-bg {
+  background: var(--background-gradient);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+}
+
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Custom barber logo styling */
+.barber-logo {
+  font-family: 'Helvetica', sans-serif;
+  font-weight: 800;
+  letter-spacing: 1px;
+  position: relative;
+  display: inline-block;
+}
+
+.barber-logo::before {
+  content: '';
+  position: absolute;
+  height: 3px;
+  width: 40%;
+  background: var(--accent);
+  bottom: -5px;
+  left: 30%;
+}
+
+.barber-logo::after {
+  content: '';
+  position: absolute;
+  height: 3px;
+  width: 20%;
+  background: var(--accent);
+  bottom: -12px;
+  left: 40%;
+}
+
+/* Modern card styling */
+.modern-card {
+  background: var(--card-gradient);
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.modern-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }

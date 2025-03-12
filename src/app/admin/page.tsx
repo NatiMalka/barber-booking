@@ -29,13 +29,13 @@ export default function AdminLoginPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
+      className="animated-gradient-bg"
       sx={{
         minHeight: '100vh',
         py: 4,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
       }}
     >
       <Container maxWidth="sm">
@@ -51,13 +51,13 @@ export default function AdminLoginPage() {
           }}
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
+            <Typography variant="h4" component="h1" gutterBottom sx={{ color: 'var(--primary-dark)' }}>
               מספרת בר ארזי
             </Typography>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
-              <ContentCut sx={{ mr: 1, transform: 'rotate(90deg)', fontSize: '1rem' }} /> 
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+              <ContentCut sx={{ mr: 1, transform: 'rotate(90deg)', fontSize: '1rem', color: 'var(--primary)' }} /> 
               כניסת מנהל 
-              <ContentCut sx={{ ml: 1, transform: 'rotate(-90deg)', fontSize: '1rem' }} />
+              <ContentCut sx={{ ml: 1, transform: 'rotate(-90deg)', fontSize: '1rem', color: 'var(--primary)' }} />
             </Typography>
           </Box>
           

@@ -60,9 +60,9 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
+        className="animated-gradient-bg"
         sx={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #6b73ff 0%, #000dff 100%)',
           py: 4,
         }}
       >
@@ -75,10 +75,10 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
             sx={{ textAlign: 'center', mb: 6 }}
           >
-            <Typography variant="h2" component="h1" sx={{ color: 'white', fontWeight: 'bold', mb: 2 }}>
+            <Typography variant="h2" component="h1" sx={{ color: 'var(--text-dark)', fontWeight: 'bold', mb: 2 }}>
               מספרת בר ארזי
             </Typography>
-            <Typography variant="h5" sx={{ color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography variant="h5" sx={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <ContentCut sx={{ mr: 1, transform: 'rotate(90deg)' }} /> עיצוב שיער <ContentCut sx={{ ml: 1, transform: 'rotate(-90deg)' }} />
             </Typography>
           </Box>
@@ -192,7 +192,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.6 }}
             sx={{ mt: 8, textAlign: 'center' }}
           >
-            <Typography variant="h4" component="h2" sx={{ color: 'white', mb: 4 }}>
+            <Typography variant="h4" component="h2" sx={{ color: 'var(--primary-dark)', mb: 4 }}>
               למה כדאי להשתמש במערכת שלנו?
             </Typography>
             <Grid container spacing={3} justifyContent="center">
@@ -254,8 +254,8 @@ export default function Home() {
               mt: 8, 
               pt: 3, 
               textAlign: 'center',
-              color: 'white',
-              borderTop: '1px solid rgba(255,255,255,0.2)'
+              color: 'var(--primary-dark)',
+              borderTop: '1px solid rgba(30, 60, 114, 0.2)'
             }}
           >
             <Typography variant="body2">
