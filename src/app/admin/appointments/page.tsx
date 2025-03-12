@@ -187,16 +187,13 @@ export default function AppointmentsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  sx={{ 
-                    mb: 2, 
-                    borderRadius: 2,
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper'
-                  }}
                   secondaryAction={
-                    <Box>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      minWidth: { xs: '100px', sm: '120px' },
+                      position: { xs: 'relative', sm: 'static' }
+                    }}>
                       <Chip 
                         size="small"
                         label={getStatusText(appointment.status)}
@@ -216,34 +213,48 @@ export default function AppointmentsPage() {
                       )}
                     </Box>
                   }
+                  sx={{ 
+                    mb: 2, 
+                    borderRadius: 2,
+                    p: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    '& .MuiListItemSecondaryAction-root': {
+                      position: 'static',
+                      transform: 'none',
+                      mt: 2,
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'flex-start'
+                    }
+                  }}
                 >
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ width: 40, height: 40, mr: 1, bgcolor: 'primary.main' }}>
-                          {appointment.name.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body1" fontWeight="bold">
-                            {appointment.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {appointment.phone}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
-                        <Typography variant="body2">
-                          {formatDate(appointment.date)} | {appointment.time}
+                  <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar sx={{ width: 40, height: 40, mr: 1, bgcolor: 'primary.main' }}>
+                        {appointment.name.charAt(0)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body1" fontWeight="bold">
+                          {appointment.name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {appointment.service}
+                          {appointment.phone}
                         </Typography>
                       </Box>
-                    </Grid>
-                  </Grid>
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography variant="body2">
+                        {appointment.time} | {formatDate(appointment.date)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {appointment.service}
+                  </Typography>
                 </ListItem>
               ))}
             </List>

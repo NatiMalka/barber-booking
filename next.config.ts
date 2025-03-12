@@ -5,7 +5,14 @@ const nextConfig: NextConfig = {
   // We'll handle RTL and Hebrew support at the component level instead
   reactStrictMode: true,
   swcMinify: true,
-  // Removing the static export to enable dynamic routing
+  // Enable static exports for GitHub Pages
+  output: 'export',
+  // Set the base path to the repository name for GitHub Pages
+  basePath: '/barber-booking',
+  // Disable image optimization since it's not compatible with static exports
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
